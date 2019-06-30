@@ -3,11 +3,13 @@ const admin = require('firebase-admin');
 
 admin.initializeApp();
 
-exports.helloWorld = functions.https.onRequest((request, response) => {
-  response.send('Hello you crazy world out there!');
-});
+const express = require('express');
+const app = express();
 
-exports.getPosts = functions.https.onRequest((req, res) =>
+app.get('/posts', (
+  req,
+  res, // (name of route, handler)
+) =>
   admin
     .firestore()
     .collection('posts')
@@ -22,13 +24,9 @@ exports.getPosts = functions.https.onRequest((req, res) =>
     .catch(err => console.error(err)),
 );
 
-exports.createPost = functions.https.onRequest((req, res) => {
-  if (req.method !== 'POST') {
-    return res.status(400).json({ error: 'method not allowed' });
-  }
+app.post('/post', (req, res) => {
   const newPost = {
     body: req.body.body,
-
     userHandle: req.body.userHandle,
     createdAt: admin.firestore.Timestamp.fromDate(new Date()),
   };
@@ -44,3 +42,7 @@ exports.createPost = functions.https.onRequest((req, res) => {
       console.error(err);
     });
 });
+
+//  have endpoint with baseurl, we want a prefix and we need to tell firebase that we're using app
+
+exports.api = functions.https.onRequest(app); // pass on app and it will automatically turn into multiple routes
