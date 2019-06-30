@@ -1,13 +1,19 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const serviceAccount = require('/Users/kellydevries/Desktop/rref/.secret/rref-354a14bdd6fa.json');
 
-admin.initializeApp();
-
-exports.helloWorld = functions.https.onRequest((request, response) => {
-  response.send('Hello you crazy world out there!');
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: 'https://rref-ad1cb.firebaseio.com',
 });
 
-exports.getPosts = functions.https.onRequest((req, res) =>
+const express = require('express');
+const app = express();
+
+app.get('/posts', (
+  req,
+  res, // (name of route, handler)
+) =>
   admin
     .firestore()
     .collection('posts')
@@ -22,13 +28,9 @@ exports.getPosts = functions.https.onRequest((req, res) =>
     .catch(err => console.error(err)),
 );
 
-exports.createPost = functions.https.onRequest((req, res) => {
-  if (req.method !== 'POST') {
-    return res.status(400).json({ error: 'method not allowed' });
-  }
+app.post('/post', (req, res) => {
   const newPost = {
     body: req.body.body,
-
     userHandle: req.body.userHandle,
     createdAt: admin.firestore.Timestamp.fromDate(new Date()),
   };
@@ -39,8 +41,12 @@ exports.createPost = functions.https.onRequest((req, res) => {
     .then(doc => {
       res.json({ message: `document ${doc.id} created successfully` });
     })
-    .catch(error => {
+    .catch(err => {
       res.status(500).json({ error: 'something went wrong' });
       console.error(err);
     });
 });
+
+//  have endpoint with baseurl, we want a prefix and we need to tell firebase that we're using app
+
+exports.api = functions.https.onRequest(app); // pass on app and it will automatically turn into multiple routes
