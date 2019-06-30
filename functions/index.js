@@ -1,7 +1,11 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const serviceAccount = require('/Users/kellydevries/Desktop/rref/.secret/rref-354a14bdd6fa.json');
 
-admin.initializeApp();
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: 'https://rref-ad1cb.firebaseio.com',
+});
 
 const express = require('express');
 const app = express();
@@ -37,7 +41,7 @@ app.post('/post', (req, res) => {
     .then(doc => {
       res.json({ message: `document ${doc.id} created successfully` });
     })
-    .catch(error => {
+    .catch(err => {
       res.status(500).json({ error: 'something went wrong' });
       console.error(err);
     });
